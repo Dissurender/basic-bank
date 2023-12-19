@@ -6,23 +6,25 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
 
-var testQueries *Queries
+var (
+	testStore   Store
+	testQueries Queries
+)
 
 func TestMain(m *testing.M) {
 	err := godotenv.Load("../../.env")
 	connString := os.Getenv("PG_CONN_STRING")
 
-	conn, err := pgx.Connect(context.Background(), connString)
+	connPool, err := pgxpool.New(context.Background(), connString)
 	if err != nil {
 		log.Fatalf("cannot connect to db: %v", err)
 	}
-	defer conn.Close(context.Background())
 
-	testQueries = New(conn)
+	testStore = NewStore(connPool)
 
 	result := m.Run()
 
